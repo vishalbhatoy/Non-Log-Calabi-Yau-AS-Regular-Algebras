@@ -1,0 +1,61 @@
+-- Algebra K
+restart
+loadPackage "AssociativeAlgebras"
+
+kk = QQ
+K = kk<|x4,x1,x2,x3|>
+
+-- Parameters
+h = 54
+q = 13
+f = 29
+
+-- Defining relations
+I = ideal{
+    x1*x4 - q*x4*x1,
+    x3*x2 + x2*x3,
+    x2*x4 - h*x4*x2,
+    x2*x1 - h*x1*x3,
+    x3*x4 - h*x4*x3,
+    x3*x1 - h*f*x1*x2
+}
+B = K/I
+
+-- Nakayama automorphism
+eta = nakayamaAut(B)
+etaEntries = (0..3)/(i -> (matrix eta)_i_0)
+
+-- Inverse Nakayama automorphism
+psi = map(kk,B)
+etainverse = map(B,B,
+    inverse psi (
+        coefficients(matrix eta,
+        Monomials => {x4,x1,x2,x3})
+    )_1
+)
+
+-- Verify the inverse
+etainverse*eta
+
+-- Search for normal elements in degrees 1 to 20
+(1..20)/(i -> normalElements(etainverse,i))
+
+-- Compute the kernel in degree n
+phi = etainverse
+B := source phi
+ringVars := gens B
+
+n = 2
+
+diffMatrix := matrix apply(ringVars, x -> {
+    leftMultiplicationMap(phi x,n)
+    - rightMultiplicationMap(x,n)
+})
+
+kerDiff := ker diffMatrix
+
+nBasis := ncBasis(n,B)
+R := ring diffMatrix
+
+if kerDiff == 0 then sub(matrix{{}},R)
+else nBasis * gens kerDiff
